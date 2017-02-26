@@ -3,6 +3,7 @@ package com.rictacius.draftpad;
 import android.content.Context;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
@@ -40,5 +41,9 @@ public class Note {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public File getFile() {
+        return new File(Dashboard.instance.getFilesDir(), id + ".txt");
     }
 }

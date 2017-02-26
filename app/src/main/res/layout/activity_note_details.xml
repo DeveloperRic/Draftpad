@@ -14,7 +14,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:weightSum="1">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -55,10 +56,19 @@
         <EditText
             android:id="@+id/ND_txtBody"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="0.94"
+            android:layout_height="292dp"
             android:ems="10"
             android:hint="Tap to add a note body"
-            android:inputType="text|textMultiLine" />
+            android:inputType="text|textMultiLine"
+            android:layout_weight="0.98" />
+
+        <Button
+            android:id="@+id/ND_btnDeleteNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete note"
+            android:textColor="@color/colorText"
+            android:background="@android:color/holo_red_light" />
     </LinearLayout>
+
 </RelativeLayout>

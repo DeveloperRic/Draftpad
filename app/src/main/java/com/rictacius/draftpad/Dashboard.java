@@ -36,6 +36,14 @@ public class Dashboard extends AppCompatActivity {
 
         instance = this;
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.Dash_CreateNoteFAB);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(instance, NoteDetailsActivity.class);
+                intent.putExtra("NOTE_ID", "");
+                startActivity(intent);
+            }
+        });
         notesRecycler = (RecyclerView) findViewById(R.id.Dash_notesRecycler);
         notesRecyclerAdapter = new NotesRecyclerAdapter(NoteManager.notes);
         notesLayoutManager = new LinearLayoutManager(this);
@@ -49,12 +57,6 @@ public class Dashboard extends AppCompatActivity {
         if (NoteManager.notes.size() > 0) {
             findViewById(R.id.Dash_noNotesLabel).setVisibility(View.GONE);
         }
-    }
-
-    public void onClickFAB(View view) {
-        Intent intent = new Intent(instance, NoteDetailsActivity.class);
-        intent.putExtra("NOTE_ID", "");
-        instance.startActivity(intent);
     }
 
     @Override
@@ -72,7 +74,9 @@ public class Dashboard extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_about) {
+            Intent intent = new Intent(this, AboutActivity.class);
+            startActivity(intent);
             return true;
         }
 
@@ -110,7 +114,7 @@ public class Dashboard extends AppCompatActivity {
                 noteTitle.setText(note.title);
                 String preview = note.body.length() > 20 ? note.body.substring(0, 17) + "..." : note.body;
                 notePreview.setText(preview);
-                SimpleDateFormat format = new SimpleDateFormat("EEE");
+                SimpleDateFormat format = new SimpleDateFormat("dd");
                 noteUpdateDay.setText(format.format(note.edited));
                 format = new SimpleDateFormat("MMM");
                 noteUpdateMonth.setText(format.format(note.edited));

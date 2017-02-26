@@ -8,7 +8,6 @@ import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -23,32 +22,32 @@ public class NoteManager {
         Date now = new Date();
         note.created = now;
         note.edited = now;
-        if (notes.size() > 0) {
-            note = checkUnique(note);
-        } else {
-            note.id = UUID.randomUUID();
-        }
+        note = checkUnique(note);
         note.title = title;
         return note;
     }
 
-    private static Note checkUnique(Note note) {
-        UUID id = null;
-        Boolean unique = false;
-        int tries = 0;
-        while (!unique && tries <= 1000) {
-            id = UUID.randomUUID();
-            tries++;
-            unique = true;
-            for (Note prevNote : notes) {
-                if (prevNote.id.equals(id)) {
-                    unique = false;
-                } else {
-                    unique = true;
+    public static Note checkUnique(Note note) {
+        if (notes.size() > 0) {
+            UUID id = null;
+            Boolean unique = false;
+            int tries = 0;
+            while (!unique && tries <= 1000) {
+                id = UUID.randomUUID();
+                tries++;
+                unique = true;
+                for (Note prevNote : notes) {
+                    if (prevNote.id.equals(id)) {
+                        unique = false;
+                    } else {
+                        unique = true;
+                    }
                 }
             }
+            note.id = id;
+        } else {
+            note.id = UUID.randomUUID();
         }
-        note.id = id;
         return note;
     }
 
@@ -60,6 +59,34 @@ public class NoteManager {
             }
         }
         return null;
+    }
+
+    public static void addNote(Note note) {
+        notes.add(note);
+        notifyChange();
+    }
+
+    private static void notifyChange() {
+        boolean sorted = false;
+        int pass = 0;
+        while (!sorted) {
+            int swaps = 0;
+            for (int i = 0; i + 1 < notes.size() - pass; i++) {
+                Note a = notes.get(i);
+                Note b = notes.get(i + 1);
+                if (a.edited.after(b.edited)) {
+                    notes.set(i, b);
+                    notes.set(i + 1, a);
+                    swaps++;
+                }
+            }
+            if (swaps == 0) {
+                sorted = true;
+            }
+        }
+        if (Dashboard.instance.notesRecyclerAdapter != null) {
+            Dashboard.instance.notesRecyclerAdapter.notifyDataSetChanged();
+        }
     }
 
     public static void loadNotes() {
@@ -93,6 +120,7 @@ public class NoteManager {
             }
             notes.add(note);
         }
+        notifyChange();
     }
 
     public static void createTestData() {
@@ -101,5 +129,12 @@ public class NoteManager {
         notes.add(createNewNote("Note 3"));
         notes.add(createNewNote("Note 4"));
         notes.add(createNewNote("Note 5"));
+        notifyChange();
+    }
+
+    public static void deleteNote(Note note) {
+        note.getFile().delete();
+        notes.remove(note);
+        notifyChange();
     }
 }
