@@ -4,31 +4,30 @@ import android.content.Context;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
-import static android.provider.Telephony.Mms.Part.FILENAME;
-
 /**
  * Created by Victor Olaitan on 19/02/2017.
  */
 
-public class Note {
+class Note {
+    private Context context;
     public UUID id;
     public String title = "";
-    public String body = "";
-    public Date created;
-    public Date edited;
+    String body = "";
+    Date created;
+    Date edited;
 
-    public Note() {
+    Note(Context context) {
+        this.context = context;
     }
 
-    public void saveNote() {
+    void saveNote() {
         try {
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(Dashboard.instance.openFileOutput(id.toString() + ".txt", Context.MODE_PRIVATE)));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(context.openFileOutput(id.toString() + ".txt", Context.MODE_PRIVATE)));
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
             writer.write("<DraftPad<NOTE_CREATED>>" + format.format(created));
             writer.newLine();
@@ -44,6 +43,6 @@ public class Note {
     }
 
     public File getFile() {
-        return new File(Dashboard.instance.getFilesDir(), id + ".txt");
+        return new File(context.getFilesDir(), id + ".txt");
     }
 }

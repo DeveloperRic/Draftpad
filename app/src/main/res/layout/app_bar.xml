@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorPrimary"
+    android:orientation="vertical">
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingEnd="@dimen/activity_horizontal_margin"
+        android:paddingStart="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_horizontal_margin"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2"
+            android:horizontalSpacing="0dp"
+            android:orientation="vertical"
+            android:rowCount="1"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="0dp">
+
+            <TextView
+                android:id="@+id/appbar_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/app_name"
+                android:textAppearance="@android:style/TextAppearance.Material.Title"
+                android:textColor="@color/colorText" />
+
+            <ImageButton
+                android:id="@+id/appbar_more"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="end"
+                android:background="@color/colorPrimary"
+                android:visibility="invisible"
+                app:srcCompat="@drawable/ic_more_vert_white_24dp" />
+
+        </GridLayout>
+
+        <GridLayout
+            android:id="@+id/appbar_extra"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/activity_horizontal_margin"
+            android:columnCount="2"
+            android:horizontalSpacing="0dp"
+            android:orientation="vertical"
+            android:rowCount="1"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="0dp">
+
+            <EditText
+                android:id="@+id/appbar_extraText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_gravity="center_vertical"
+                android:ems="10"
+                android:hint="Input text"
+                android:inputType="text"
+                android:selectAllOnFocus="true"
+                android:singleLine="false"
+                android:textColor="@color/colorText"
+                android:textColorHint="@color/colorTextHint" />
+
+            <TextView
+                android:id="@+id/appbar_extraButton"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:layout_gravity="end|center_vertical"
+                android:text="SAVE"
+                android:textAlignment="center"
+                android:textAllCaps="true"
+                android:textColor="@color/colorText"
+                android:textStyle="normal|bold" />
+
+        </GridLayout>
+
+    </android.support.design.widget.AppBarLayout>
+
+</LinearLayout>

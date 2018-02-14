@@ -1,8 +1,10 @@
 package com.rictacius.draftpad;
 
+import android.app.Activity;
+import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -10,53 +12,161 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class Dashboard extends AppCompatActivity {
-    public static Dashboard instance;
+    static DashboardClass dash;
     RecyclerView notesRecycler;
     LinearLayoutManager notesLayoutManager;
     NotesRecyclerAdapter notesRecyclerAdapter;
+
+    public class DashboardClass {
+        Context context;
+        NoteManager noteManager;
+        NotesRecyclerAdapter.NoteViewHolder currentNoteView;
+
+        static final int NOTE_DETAILS_RETURN = 0;
+        static final int BADGE_PERMISSION_RETURN = 1;
+
+        DashboardClass(Dashboard instance) {
+            context = instance;
+            noteManager = new NoteManager();
+        }
+
+        Activity activity() {
+            return (Activity) context;
+        }
+
+        NotesRecyclerAdapter notesRecyclerAdapter() {
+            return notesRecyclerAdapter;
+        }
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
-        instance = this;
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.Dash_CreateNoteFAB);
+        ActivityManager.initActivity(this);
+        ActivityManager.AppBar.init(this, ActivityManager.AppBar.VisibilityToken.SHOW_MORE);
+
+        findViewById(R.id.appbar_more).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(dash.context, AboutActivity.class);
+                startActivity(intent);
+                overridePendingTransition(R.anim.trans_fade_in, R.anim.trans_fade_out);
+            }
+        });
+
+        dash = new DashboardClass(this);
+        FloatingActionButton fab = findViewById(R.id.Dash_CreateNoteFAB);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(instance, NoteDetailsActivity.class);
-                intent.putExtra("NOTE_ID", "");
-                startActivity(intent);
+                openNote(Dashboard.dash.context, "");
             }
         });
-        notesRecycler = (RecyclerView) findViewById(R.id.Dash_notesRecycler);
-        notesRecyclerAdapter = new NotesRecyclerAdapter(NoteManager.notes);
+
+        notesRecycler = findViewById(R.id.Dash_notesRecycler);
+        notesRecyclerAdapter = new NotesRecyclerAdapter(dash.noteManager.notes, this);
         notesLayoutManager = new LinearLayoutManager(this);
         notesRecycler.setLayoutManager(notesLayoutManager);
         notesRecycler.setItemAnimator(new DefaultItemAnimator());
         notesRecycler.setAdapter(notesRecyclerAdapter);
-        NoteManager.loadNotes();
-        if (NoteManager.notes.size() == 0) {
-            NoteManager.createTestData();
-        }
-        if (NoteManager.notes.size() > 0) {
+        dash.noteManager.loadNotes();
+        if (dash.noteManager.notes.size() > 0) {
             findViewById(R.id.Dash_noNotesLabel).setVisibility(View.GONE);
         }
+
+        /*
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if(!Settings.canDrawOverlays(getBaseContext())) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Draftpad")
+                        .setMessage("The draftpad badge requires extra permissions.\n\n" +
+                                "Please enable drawing over other apps.")
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                            Uri.parse("package:com.rictacius.draftpad"));
+                                    startActivityForResult(intent, DashboardClass.BADGE_PERMISSION_RETURN);
+                                }
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, null).show();
+            } else{
+                //enableBadge();
+            }
+        } else {
+            //enableBadge();
+        }
+        */
+    }
+
+    void enableBadge() {
+        Intent intent = new Intent(this, DraftpadBadge.class);
+        startService(intent);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case (DashboardClass.NOTE_DETAILS_RETURN): {
+                if (resultCode == Activity.RESULT_OK) {
+                    refreshNoteList();
+                }
+                break;
+            }
+            case (DashboardClass.BADGE_PERMISSION_RETURN): {
+                if (resultCode == Activity.RESULT_OK) {
+                    //enableBadge();
+                }
+            }
+        }
+    }
+
+    static void refreshNoteList() {
+        dash.noteManager.loadNotes();
+    }
+
+    static View findView(int id) {
+        return dash.activity().findViewById(id);
+    }
+
+    static void showSnackBar(String text, int length, int textColor) {
+        Snackbar snackbar = Snackbar
+                .make(findView(R.id.Dash_CoordinatorLayout), text, length)
+                .setActionTextColor(textColor);
+        snackbar.show();
+    }
+
+    static void showSnackBarWithAction(String text, int length, int textColor, String actionText, final Runnable action) {
+        Snackbar snackbar = Snackbar
+                .make(findView(R.id.Dash_CoordinatorLayout), text, length)
+                .setActionTextColor(textColor)
+                .setAction(actionText, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        action.run();
+                    }
+                });
+        snackbar.show();
     }
 
     @Override
@@ -66,8 +176,7 @@ public class Dashboard extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onAppbarMoreClick(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
@@ -77,15 +186,34 @@ public class Dashboard extends AppCompatActivity {
         if (id == R.id.action_about) {
             Intent intent = new Intent(this, AboutActivity.class);
             startActivity(intent);
+            overridePendingTransition(R.anim.trans_fade_in, R.anim.trans_fade_out);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    public static class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdapter.NoteViewHolder> {
+    static void openNote(Context context, String noteID) {
+        if (noteID.equals("")) {
+            dash.currentNoteView = null;
+        }
+        if (context instanceof Service) {
+            Intent dialogIntent = new Intent(context, NoteDetailsActivity.class);
+            dialogIntent.putExtra("NOTE_ID", noteID);
+            dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(dialogIntent);
+        } else {
+            Intent intent = new Intent(context, NoteDetailsActivity.class);
+            intent.putExtra("NOTE_ID", noteID);
+            ((Activity) context).startActivityForResult(intent, DashboardClass.NOTE_DETAILS_RETURN);
+            ((Activity) context).overridePendingTransition(R.anim.trans_fade_in, R.anim.trans_fade_out);
+        }
+    }
 
-        public static class NoteViewHolder extends RecyclerView.ViewHolder {
+    static class NotesRecyclerAdapter extends RecyclerView.Adapter<NotesRecyclerAdapter.NoteViewHolder> {
+
+        static class NoteViewHolder extends RecyclerView.ViewHolder {
+            NoteViewHolder viewHolder;
             Note note;
             CardView cv;
             TextView noteTitle;
@@ -93,19 +221,20 @@ public class Dashboard extends AppCompatActivity {
             TextView noteUpdateDay;
             TextView noteUpdateMonth;
 
-            NoteViewHolder(View itemView) {
+            NoteViewHolder(final View itemView) {
                 super(itemView);
-                cv = (CardView) itemView.findViewById(R.id.cv);
-                noteTitle = (TextView) itemView.findViewById(R.id.noteTitle);
-                notePreview = (TextView) itemView.findViewById(R.id.notePreview);
-                noteUpdateDay = (TextView) itemView.findViewById(R.id.noteUpdateDay);
-                noteUpdateMonth = (TextView) itemView.findViewById(R.id.noteUpdateMonth);
+                viewHolder = this;
+                cv = itemView.findViewById(R.id.cv);
+                noteTitle = itemView.findViewById(R.id.noteTitle);
+                notePreview = itemView.findViewById(R.id.notePreview);
+                noteUpdateDay = itemView.findViewById(R.id.noteUpdateDay);
+                noteUpdateMonth = itemView.findViewById(R.id.noteUpdateMonth);
+                final Context context = itemView.getContext();
                 cv.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Intent intent = new Intent(instance, NoteDetailsActivity.class);
-                        intent.putExtra("NOTE_ID", note.id.toString());
-                        instance.startActivity(intent);
+                        Dashboard.dash.currentNoteView = viewHolder;
+                        Dashboard.openNote(context, note.id.toString());
                     }
                 });
             }
@@ -113,6 +242,7 @@ public class Dashboard extends AppCompatActivity {
             void updateInfo() {
                 noteTitle.setText(note.title);
                 String preview = note.body.length() > 20 ? note.body.substring(0, 17) + "..." : note.body;
+                preview = preview.replaceAll("\\n", "");
                 notePreview.setText(preview);
                 SimpleDateFormat format = new SimpleDateFormat("dd");
                 noteUpdateDay.setText(format.format(note.edited));
@@ -121,10 +251,13 @@ public class Dashboard extends AppCompatActivity {
             }
         }
 
+        private Context context;
         List<Note> notes;
+        private int lastPosition = -1;
 
-        NotesRecyclerAdapter(List<Note> notes) {
+        NotesRecyclerAdapter(List<Note> notes, Context context) {
             this.notes = notes;
+            this.context = context;
         }
 
         @Override
@@ -135,15 +268,23 @@ public class Dashboard extends AppCompatActivity {
         @Override
         public NoteViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
             View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.note_list_row, viewGroup, false);
-            NoteViewHolder pvh = new NoteViewHolder(v);
-            return pvh;
+            return new NoteViewHolder(v);
         }
 
         @Override
         public void onBindViewHolder(NoteViewHolder noteViewHolder, int i) {
-            Note note = notes.get(i);
-            noteViewHolder.note = note;
+            noteViewHolder.note = notes.get(i);
             noteViewHolder.updateInfo();
+            setAnimation(noteViewHolder.itemView, i);
+        }
+
+        private void setAnimation(View viewToAnimate, int position) {
+            // If the bound view wasn't previously displayed on screen, it's animated
+            if (position > lastPosition) {
+                Animation animation = AnimationUtils.loadAnimation(context, R.anim.trans_fade_in);
+                viewToAnimate.startAnimation(animation);
+                lastPosition = position;
+            }
         }
 
         @Override

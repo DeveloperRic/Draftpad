@@ -1,12 +1,14 @@
 package com.rictacius.draftpad;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,17 +27,38 @@ public class NoteDetailsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_details);
-        txtTitle = (EditText) findViewById(R.id.ND_txtTitle);
-        txtBody = (EditText) findViewById(R.id.ND_txtBody);
-        lblDone = (TextView) findViewById(R.id.ND_lblDone);
-        btnDeleteNote = (Button) findViewById(R.id.ND_btnDeleteNote);
+
+        ActivityManager.initActivity(this);
+        ActivityManager.AppBar.init(this, ActivityManager.AppBar.VisibilityToken.SHOW_EXTRA);
+        ActivityManager.AppBar.setInputTextHint(this, R.string.noteDetails_titleHint);
+        ActivityManager.AppBar.setButtonName(this, R.string.noteDetails_save);
+
+        txtTitle = ActivityManager.AppBar.getInputText(this);
+        txtBody = findViewById(R.id.ND_txtBody);
+        lblDone = ActivityManager.AppBar.getButton(this);
+        btnDeleteNote = findViewById(R.id.ND_btnDeleteNote);
 
         Intent intent = getIntent();
-        String ID_String = intent.getStringExtra("NOTE_ID");
+        final String ID_String = intent.getStringExtra("NOTE_ID");
         if (!ID_String.equals("")) {
-            note = NoteManager.findNote(UUID.fromString(ID_String));
+            note = Dashboard.dash.noteManager.findNote(UUID.fromString(ID_String));
+            ActivityManager.AppBar.setTitleText(this, R.string.noteDetails_appBarEdit);
         } else {
-            note = NoteManager.createNewNote("");
+            note = Dashboard.dash.noteManager.createNewNote("");
+            btnDeleteNote.setEnabled(false);
+            btnDeleteNote.setBackgroundColor(Color.GRAY);
+            ActivityManager.AppBar.setTitleText(this, R.string.noteDetails_appBarCreate);
+        }
+
+        if (note == null) {
+            finish();
+            overridePendingTransition(R.anim.trans_fade_in, R.anim.trans_fade_out);
+            Dashboard.showSnackBarWithAction("Could not initialise note!", Snackbar.LENGTH_LONG, Color.RED, "RETRY", new Runnable() {
+                @Override
+                public void run() {
+                    Dashboard.openNote(Dashboard.dash.context, ID_String);
+                }
+            });
         }
 
         txtTitle.setText(note.title);
@@ -43,11 +66,13 @@ public class NoteDetailsActivity extends AppCompatActivity {
         lblDone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (Dashboard.dash.noteManager.notes.size() == 0) {
+                    Dashboard.dash.noteManager.toggleNoNotesLabel(false);
+                }
                 note.title = txtTitle.getText().toString();
                 note.body = txtBody.getText().toString();
                 note.saveNote();
-                NoteManager.loadNotes();
-                finish();
+                sendNotesRefresh();
             }
         });
         btnDeleteNote.setOnClickListener(new View.OnClickListener() {
@@ -60,20 +85,33 @@ public class NoteDetailsActivity extends AppCompatActivity {
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                             public void onClick(DialogInterface dialog, int whichButton) {
-                                NoteManager.deleteNote(note);
+
+                                final int position = Dashboard.dash.noteManager.hideNote(note);
+
+                                final Handler deleteHandler = new Handler();
+                                final Runnable deleteRunnable = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (Dashboard.dash.noteManager.notes.size() == 1) {
+                                            Dashboard.dash.noteManager.toggleNoNotesLabel(true);
+                                        }
+                                        Dashboard.dash.noteManager.deleteNote(note, position);
+                                    }
+                                };
+
+                                deleteHandler.postDelayed(deleteRunnable, 3500);
+
                                 finish();
-                                Snackbar snackbar = Snackbar
-                                        .make(Dashboard.instance.findViewById(R.id.Dash_CoordinatorLayout), "Note Deleted!", Snackbar.LENGTH_LONG)
-                                        .setActionTextColor(Color.RED)
-                                        .setAction("UNDO", new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View view) {
-                                                note = NoteManager.checkUnique(note);
-                                                note.saveNote();
-                                                NoteManager.addNote(note);
-                                            }
-                                        });
-                                snackbar.show();
+                                overridePendingTransition(R.anim.trans_fade_in, R.anim.trans_fade_out);
+
+                                Dashboard.showSnackBarWithAction("Note Deleted!", Snackbar.LENGTH_LONG, Color.RED, "UNDO", new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        deleteHandler.removeCallbacks(deleteRunnable);
+                                        Dashboard.dash.noteManager.toggleNoNotesLabel(false);
+                                        Dashboard.dash.noteManager.unhideNote(note, position);
+                                    }
+                                });
                             }
                         })
                         .setNegativeButton(android.R.string.no, null).show();
@@ -81,4 +119,31 @@ public class NoteDetailsActivity extends AppCompatActivity {
         });
 
     }
+
+    void sendNotesRefresh() {
+        if (Dashboard.dash.currentNoteView != null) {
+            Dashboard.dash.currentNoteView.updateInfo();
+        } else {
+            setResult(Activity.RESULT_OK);
+        }
+        finish();
+        overridePendingTransition(R.anim.trans_fade_in, R.anim.trans_fade_out);
+    }
+
+    int previousNoteLocation;
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(R.anim.trans_fade_in, R.anim.trans_fade_out);
+    }
+
+    /*
+    <include
+        layout="@layout/app_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+     */
+
+    /**/
 }

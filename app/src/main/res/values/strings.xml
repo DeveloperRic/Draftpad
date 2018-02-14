@@ -1,4 +1,14 @@
 <resources>
     <string name="app_name">Draftpad</string>
     <string name="action_settings">Settings</string>
+    <string name="dash_noNotes">YOU HAVE NO NOTES</string>
+    <string name="app_author">Victor Olaitan</string>
+    <string name="about_defaultDesc">The purpose of Draftpad is to allow you to create and edit notes in the most simple and easy to use manner possible.</string>
+    <string name="about_visitWebsite">Visit my website</string>
+    <string name="noteDetails_appBarCreate">Create Note</string>
+    <string name="noteDetails_appBarEdit">Edit Note</string>
+    <string name="noteDetails_titleHint">Tap to add a title</string>
+    <string name="noteDetails_save">Save</string>
+    <string name="noteDetails_bodyHint">Tap to add a note body</string>
+    <string name="noteDetails_delete">Delete note</string>
 </resources>
