@@ -36,7 +36,6 @@ public class Dashboard extends AppCompatActivity {
         NotesRecyclerAdapter.NoteViewHolder currentNoteView;
 
         static final int NOTE_DETAILS_RETURN = 0;
-        static final int BADGE_PERMISSION_RETURN = 1;
 
         DashboardClass(Dashboard instance) {
             context = instance;
@@ -89,38 +88,6 @@ public class Dashboard extends AppCompatActivity {
         if (dash.noteManager.notes.size() > 0) {
             findViewById(R.id.Dash_noNotesLabel).setVisibility(View.GONE);
         }
-
-        /*
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(!Settings.canDrawOverlays(getBaseContext())) {
-                new AlertDialog.Builder(this)
-                        .setTitle("Draftpad")
-                        .setMessage("The draftpad badge requires extra permissions.\n\n" +
-                                "Please enable drawing over other apps.")
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                            Uri.parse("package:com.rictacius.draftpad"));
-                                    startActivityForResult(intent, DashboardClass.BADGE_PERMISSION_RETURN);
-                                }
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, null).show();
-            } else{
-                //enableBadge();
-            }
-        } else {
-            //enableBadge();
-        }
-        */
-    }
-
-    void enableBadge() {
-        Intent intent = new Intent(this, DraftpadBadge.class);
-        startService(intent);
     }
 
     @Override
@@ -132,11 +99,6 @@ public class Dashboard extends AppCompatActivity {
                     refreshNoteList();
                 }
                 break;
-            }
-            case (DashboardClass.BADGE_PERMISSION_RETURN): {
-                if (resultCode == Activity.RESULT_OK) {
-                    //enableBadge();
-                }
             }
         }
     }

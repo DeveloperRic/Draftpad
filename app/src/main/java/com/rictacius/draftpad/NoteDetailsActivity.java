@@ -134,6 +134,23 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        new AlertDialog.Builder(NoteDetailsActivity.this)
+                .setTitle("Draftpad")
+                .setMessage("Do you want to save your progress before leaving?")
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        exitActivity();
+                    }
+                }).show();
+    }
+
+    private void exitActivity() {
         super.onBackPressed();
         overridePendingTransition(R.anim.trans_fade_in, R.anim.trans_fade_out);
     }
