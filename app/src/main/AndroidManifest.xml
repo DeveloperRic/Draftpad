@@ -17,8 +17,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".NoteDetailsActivity" />
-        <activity android:name=".AboutActivity" />
+        <activity
+            android:name=".NoteDetailsActivity"
+            android:parentActivityName=".Dashboard" />
+        <activity
+            android:name=".AboutActivity"
+            android:label="@string/appbar_action_about"
+            android:parentActivityName=".Dashboard" />
 
     </application>
 

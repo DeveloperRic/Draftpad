@@ -2,14 +2,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.rictacius.draftpad.Dashboard">
+
     <item
-        android:id="@+id/action_about"
-        android:orderInCategory="100"
-        android:title="About"
-        app:showAsAction="never"/>
+        android:id="@+id/dash_appbar_action_sort"
+        android:icon="@drawable/ic_sort_white_48dp"
+        android:title="@string/appbar_action_sort"
+        app:showAsAction="always" />
+
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/dash_appbar_action_search"
+        android:icon="@drawable/ic_search_white_48dp"
+        android:title="@string/appbar_action_search"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        app:showAsAction="ifRoom|collapseActionView" />
+
+    <item
+        android:id="@+id/dash_appbar_action_about"
+        android:icon="@drawable/ic_info_white_48dp"
         android:orderInCategory="100"
-        android:title="Options"
+        android:title="@string/appbar_action_about"
         app:showAsAction="never" />
+
 </menu>

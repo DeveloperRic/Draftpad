@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_note_details"
     android:layout_width="match_parent"
@@ -13,15 +14,42 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <include
-            layout="@layout/app_bar"
-            android:id="@+id/include" />
+        <android.support.design.widget.AppBarLayout
+            android:id="@+id/ND_appbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:elevation="4dp">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/ND_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorPrimary"
+                android:theme="@style/AppTheme.AppBarOverlay"
+                app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+            <EditText
+                android:id="@+id/ND_txtTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:ems="10"
+                android:hint="@string/noteDetails_titleHint"
+                android:inputType="text"
+                android:selectAllOnFocus="false"
+                android:singleLine="true"
+                android:textColor="@color/colorTextHint"
+                android:textColorHint="@android:color/darker_gray" />
+
+        </android.support.design.widget.AppBarLayout>
 
         <include
-            android:layout_below="@+id/include"
             layout="@layout/content_note_details"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent" />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/ND_appbar" />
 
     </RelativeLayout>
 
