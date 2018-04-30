@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
@@ -16,7 +15,6 @@ import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 
 import java.util.Date;
@@ -24,30 +22,15 @@ import java.util.UUID;
 
 public class NoteDetailsActivity extends AppCompatActivity {
     Note note;
+    FormatBar formatBar;
     EditText txtTitle;
     EditText txtBody;
-    Button btnDeleteNote;
     boolean hasUnsavedChanges, isNewNote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_details);
-
-        //ActivityManager.AppBar.init(this, ActivityManager.AppBar.VisibilityToken.SHOW_EXTRA);
-        //ActivityManager.AppBar.setInputTextHint(this, R.string.noteDetails_titleHint);
-        setSupportActionBar((Toolbar) findViewById(R.id.ND_toolbar));
-        //TODO note details appbar
-
-        // Get a support ActionBar corresponding to this toolbar
-        ActionBar ab = getSupportActionBar();
-        if (ab != null) {
-            ab.setDisplayHomeAsUpEnabled(true);
-        }
-
-        txtTitle = findViewById(R.id.ND_txtTitle);
-        txtBody = findViewById(R.id.ND_txtBody);
-        btnDeleteNote = findViewById(R.id.ND_btnDeleteNote);
 
         Intent intent = getIntent();
         final String ID_String = intent.getStringExtra("NOTE_ID");
@@ -58,8 +41,6 @@ public class NoteDetailsActivity extends AppCompatActivity {
             isNewNote = true;
             note = ActivityManager.getNoteManager().createNewNote();
             setTitle(R.string.noteDetails_appBarCreate);
-            btnDeleteNote.setEnabled(false);
-            btnDeleteNote.setBackgroundColor(Color.GRAY);
         }
 
         if (note == null) {
@@ -67,6 +48,17 @@ public class NoteDetailsActivity extends AppCompatActivity {
             overridePendingTransition(R.anim.trans_fade_in, R.anim.trans_fade_out);
             ActivityManager.getDashboardActivity().notifyFailedToInit(ID_String);
         }
+
+        setSupportActionBar((Toolbar) findViewById(R.id.ND_toolbar));
+
+        // Get a support ActionBar corresponding to this toolbar
+        ActionBar ab = getSupportActionBar();
+        if (ab != null) {
+            ab.setDisplayHomeAsUpEnabled(true);
+        }
+
+        txtTitle = findViewById(R.id.ND_txtTitle);
+        txtBody = findViewById(R.id.ND_txtBody);
 
         txtTitle.setText(note.title);
         txtTitle.addTextChangedListener(new TextWatcher() {
@@ -99,13 +91,41 @@ public class NoteDetailsActivity extends AppCompatActivity {
                 hasUnsavedChanges = !editable.toString().equals(note.body);
             }
         });
-
-        btnDeleteNote.setOnClickListener(new View.OnClickListener() {
+        txtBody.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
-            public void onClick(View view) {
-                new AlertDialog.Builder(NoteDetailsActivity.this)
-                        .setTitle("Draftpad")
-                        .setMessage("Do you really want to delete this note?")
+            public void onFocusChange(View view, boolean hasFocus) {
+                if (hasFocus) {
+                    formatBar.show();
+                } else {
+                    formatBar.hide();
+                }
+            }
+        });
+
+        formatBar = new FormatBar(this, note, txtBody);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_note_details, menu);
+
+        menu.findItem(R.id.ND_appbar_action_delete).setEnabled(!isNewNote);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                checkSaved();
+                return true;
+            case R.id.ND_appbar_action_save:
+                saveNote(note, false);
+                return true;
+            case R.id.ND_appbar_action_delete:
+                AlertDialog.Builder confirmDelete = new AlertDialog.Builder(NoteDetailsActivity.this)
+                        .setTitle(R.string.app_name)
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
@@ -134,27 +154,14 @@ public class NoteDetailsActivity extends AppCompatActivity {
                                 ActivityManager.getDashboardActivity().notifyNoteDeleted(deleteHandler, deleteRunnable, note, position);
                             }
                         })
-                        .setNegativeButton(android.R.string.no, null).show();
-            }
-        });
-
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(final Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_note_details, menu);
-
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.ND_appbar_action_save:
-                saveNote(note, false);
+                        .setNegativeButton(android.R.string.no, null);
+                if (note.children.size() == 0) {
+                    confirmDelete.setMessage(R.string.noteDetails_confirmDeleteNormal);
+                } else {
+                    confirmDelete.setMessage(R.string.noteDetails_confirmDeleteGroup);
+                }
+                confirmDelete.show();
                 return true;
-
             default:
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.
@@ -175,6 +182,10 @@ public class NoteDetailsActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        checkSaved();
+    }
+
+    private void checkSaved() {
         if (hasUnsavedChanges) {
             new AlertDialog.Builder(NoteDetailsActivity.this)
                     .setTitle("Draftpad")

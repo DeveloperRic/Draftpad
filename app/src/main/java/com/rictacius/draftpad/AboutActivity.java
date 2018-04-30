@@ -16,7 +16,6 @@ public class AboutActivity extends AppCompatActivity {
         setContentView(R.layout.activity_about);
 
         setSupportActionBar((Toolbar) findViewById(R.id.ND_toolbar));
-        //TODO note details appbar
 
         // Get a support ActionBar corresponding to this toolbar
         ActionBar ab = getSupportActionBar();
@@ -29,6 +28,15 @@ public class AboutActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://victorolaitan.xyz"));
                 startActivity(Intent.createChooser(browserIntent, "Visit my website"));
+            }
+        });
+
+        findViewById(R.id.about_creditsAFAB).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://github.com/futuresimple/android-floating-action-button"));
+                startActivity(Intent.createChooser(browserIntent, "Android Floating Action Button"));
             }
         });
     }

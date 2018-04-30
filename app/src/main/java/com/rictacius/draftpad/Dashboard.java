@@ -1,9 +1,9 @@
 package com.rictacius.draftpad;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,11 +52,28 @@ public class Dashboard extends AppCompatActivity {
 
         setSupportActionBar((Toolbar) findViewById(R.id.dash_appbar));
 
-        FloatingActionButton fab = findViewById(R.id.Dash_CreateNoteFAB);
-        fab.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.dash_fabCreateNote).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 openNote("");
+            }
+        });
+        findViewById(R.id.dash_fabNewGroup).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Note note = ActivityManager.getNoteManager().createNewNote();
+                note.title = getResources().getString(R.string.dash_newGroupTitle);
+                Note child = ActivityManager.getNoteManager().createNewNote();
+                child.title = getResources().getString(R.string.dash_newGroupChildTitle);
+                child.body = getResources().getString(R.string.dash_newGroupChildBody);
+                note.children.add(child);
+                if (child.save() && note.save()) {
+                    ActivityManager.getNoteManager().addNote(note);
+                } else {
+                    Snackbar.make(findViewById(R.id.Dash_CoordinatorLayout),
+                            R.string.snackbar_failedToMakeGroup, Snackbar.LENGTH_INDEFINITE)
+                            .show();
+                }
             }
         });
 
@@ -91,7 +109,6 @@ public class Dashboard extends AppCompatActivity {
 
         MenuItem searchItem = menu.findItem(R.id.dash_appbar_action_search);
         SearchView searchView = (SearchView) searchItem.getActionView();
-        //TODO add search tool
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -218,13 +235,16 @@ public class Dashboard extends AppCompatActivity {
         static class NoteViewHolder extends RecyclerView.ViewHolder {
             Note note;
             NoteViewHolder viewHolder;
+            Context context;
             CardView cv;
             TextView noteTitle;
             TextView notePreview;
+            ImageButton noteExpand;
 
-            NoteViewHolder(View itemView) {
+            NoteViewHolder(final View itemView) {
                 super(itemView);
                 viewHolder = this;
+                context = itemView.getContext();
                 cv = itemView.findViewById(R.id.note_cv);
 
                 noteTitle = itemView.findViewById(R.id.noteTitle);
@@ -232,8 +252,75 @@ public class Dashboard extends AppCompatActivity {
                 cv.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        ActivityManager.getDashboardActivity().currentNoteView = viewHolder;
-                        ActivityManager.getDashboardActivity().openNote(note.id.toString());
+                        if (!ActivityManager.getNoteManager().isSelectingChildNotes()) {
+                            ActivityManager.getDashboardActivity().currentNoteView = viewHolder;
+                            ActivityManager.getDashboardActivity().openNote(note.id.toString());
+                        } else if (!note.isNoteGroup) {
+                            ActivityManager.getNoteManager().toggleNoteSelectionState(note);
+                            ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyDataSetChanged();
+                        } else {
+                            Toast.makeText(context,
+                                    R.string.dash_cannotSelectParentAsChild, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+                cv.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        if (ActivityManager.getNoteManager().isSelectingChildNotes()) {
+                            if (ActivityManager.getNoteManager().isSelectedParentNote(note)) {
+                                ActivityManager.getNoteManager().stopNoteGrouping();
+                                ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyDataSetChanged();
+                                Snackbar.make(ActivityManager.getDashboardActivity().findViewById(R.id.Dash_CoordinatorLayout),
+                                        R.string.dash_noLongerSelectingChildren, Snackbar.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(context,
+                                        R.string.dash_alreadySelectingChildren, Toast.LENGTH_SHORT).show();
+                            }
+                        } else if (!ActivityManager.getNoteManager().isChildNote(note)) {
+                            ActivityManager.getNoteManager().startNoteGrouping(note);
+                            ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyDataSetChanged();
+
+                            Snackbar.make(ActivityManager.getDashboardActivity().findViewById(R.id.Dash_CoordinatorLayout),
+                                    R.string.dash_selectingChildrenSnackbar, Snackbar.LENGTH_INDEFINITE)
+                                    .setAction(R.string.snackbar_finish, new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            ActivityManager.getNoteManager().stopNoteGrouping();
+                                            ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyDataSetChanged();
+                                            Snackbar.make(ActivityManager.getDashboardActivity().findViewById(R.id.Dash_CoordinatorLayout),
+                                                    R.string.dash_noLongerSelectingChildren, Snackbar.LENGTH_SHORT).show();
+                                        }
+                                    })
+                                    .show();
+                        } else {
+                            Toast.makeText(context,
+                                    R.string.dash_cannotSelectChildAsParent, Toast.LENGTH_SHORT).show();
+                        }
+                        return false;
+                    }
+                });
+
+                noteExpand = itemView.findViewById(R.id.noteExpand);
+                noteExpand.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (note.children.size() != 0) {
+                            if (!note.noteChildrenExpanded) {
+                                int parentPosition = ActivityManager.getNoteManager().findLocation(note);
+                                for (int i = 0; i < note.children.size(); i++) {
+                                    Note child = note.children.get(i);
+                                    ActivityManager.getNoteManager().unhideNote(child, parentPosition + i + 1);
+                                }
+                                noteExpand.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_expand_less_black_24dp));
+                            } else {
+                                for (Note child : note.children) {
+                                    ActivityManager.getNoteManager().hideNote(child);
+                                }
+                                noteExpand.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_expand_more_black_24dp));
+                            }
+                            note.noteChildrenExpanded = !note.noteChildrenExpanded;
+                        }
                     }
                 });
             }
@@ -241,8 +328,29 @@ public class Dashboard extends AppCompatActivity {
             void updateInfo() {
                 noteTitle.setText(note.title);
                 String preview = note.body.length() > 20 ? note.body.substring(0, 17) + "..." : note.body;
-                preview = preview.replaceAll("\\n", "");
+                preview = preview.replaceAll("\\n", "\t");
                 notePreview.setText(preview);
+                if (ActivityManager.getNoteManager().isSelectingChildNotes()) {
+                    if (ActivityManager.getNoteManager().isSelectedParentNote(note)) {
+                        cv.setCardBackgroundColor(
+                                context.getResources().getColor(R.color.colorRowParent));
+                    } else if (ActivityManager.getNoteManager().isSelectedChildNote(note)) {
+                        cv.setCardBackgroundColor(
+                                context.getResources().getColor(R.color.colorRowSelected));
+                    } else {
+                        cv.setCardBackgroundColor(
+                                context.getResources().getColor(R.color.cardview_light_background));
+                    }
+                } else {
+                    if (ActivityManager.getNoteManager().isChildNote(note)) {
+                        cv.setCardBackgroundColor(
+                                context.getResources().getColor(R.color.colorRowChild));
+                    } else {
+                        cv.setCardBackgroundColor(
+                                context.getResources().getColor(R.color.cardview_light_background));
+                    }
+                }
+                noteExpand.setVisibility(note.children.size() != 0 && !ActivityManager.getNoteManager().isSelectingChildNotes() ? View.VISIBLE : View.GONE);
             }
         }
 

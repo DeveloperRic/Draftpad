@@ -7,6 +7,12 @@
         android:id="@+id/ND_appbar_action_save"
         android:icon="@drawable/ic_save_white_24dp"
         android:title="@string/appbar_action_save"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/ND_appbar_action_delete"
+        android:icon="@drawable/ic_delete_white_24dp"
+        android:title="@string/noteDetails_delete"
         app:showAsAction="ifRoom" />
 
 </menu>

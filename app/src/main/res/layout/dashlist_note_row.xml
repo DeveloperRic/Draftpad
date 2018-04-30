@@ -22,25 +22,42 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1.00"
-            android:orientation="vertical"
-            android:weightSum="1">
+            android:orientation="horizontal"
+            android:paddingEnd="16dp">
 
-            <TextView
-                android:id="@+id/noteTitle"
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Note Title"
-                android:textColor="@color/colorPrimary"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:layout_weight="0.9"
+                android:orientation="vertical"
+                android:weightSum="0.9">
 
-            <TextView
-                android:id="@+id/notePreview"
-                android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/noteTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Note Title"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/notePreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Note Preview"
+                    android:textColor="@color/colorTextSecondary" />
+
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/noteExpand"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Note Preview"
-                android:textColor="@color/colorTextSecondary" />
+                android:backgroundTint="@color/cardview_light_background"
+                android:tint="@color/colorPrimary"
+                android:visibility="gone"
+                app:srcCompat="@drawable/ic_expand_more_black_24dp" />
 
         </LinearLayout>
 

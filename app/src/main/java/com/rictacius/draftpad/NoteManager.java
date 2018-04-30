@@ -31,6 +31,7 @@ class NoteManager {
     private ArrayList<Note> filteredNotes = new ArrayList<>();
     private NoteComparator noteComparator = new NoteComparator();
     boolean notesSorted, notesLoaded;
+    private Note selectedParentNote;
 
     private NoteManager() {
     }
@@ -61,8 +62,11 @@ class NoteManager {
                     String ID = String.valueOf(file.getName()
                             .replaceAll("NOTE_", "").replaceAll(".txt", ""));
                     EasyJSON noteData = EasyJSON.open(new File(context.getFilesDir(), "NOTE_" + ID + ".txt"));
-                    if (!noteManager.loadNote(noteData)) {
+                    Note note = new Note(ActivityManager.getDashboardActivity());
+                    if (!note.parse(noteData, noteManager.notes)) {
                         noteManager.notesLoaded = false;
+                    } else {
+                        noteManager.notes.add(note);
                     }
                 } catch (IOException | EasyJSONException e) {
                     e.printStackTrace();
@@ -70,24 +74,27 @@ class NoteManager {
                 }
             }
         }
-        return new Pair<>(noteManager, noteManager.notesLoaded ? ErrorCode.NO_ERROR : ErrorCode.NOTE_MALFORMED);
-    }
-
-    private boolean loadNote(EasyJSON noteData) {
-        Note note = new Note(ActivityManager.getDashboardActivity());
-        try {
-            note.id = UUID.fromString((String) noteData.valueOf("id"));
-            note.created = Note.dateFormat.parse((String) noteData.valueOf("created"));
-            note.edited = Note.dateFormat.parse((String) noteData.valueOf("edited"));
-            note.title = (String) noteData.valueOf("title");
-            note.body = ((String) noteData.valueOf("body"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+        for (int i = 0; i < noteManager.notes.size(); i++) {
+            Note note = noteManager.notes.get(i);
+            if (note.childIDs != null) {
+                for (UUID childID : note.childIDs) {
+                    Note child = noteManager.findNote(childID);
+                    if (child == note) {
+                        note.children.clear();
+                        break;
+                    }
+                    note.children.add(child);
+                    if (noteManager.findLocation(child) < i) {
+                        i--;
+                    }
+                    noteManager.notes.remove(child);
+                }
+                if (note.children.size() != 0) {
+                    note.isNoteGroup = true;
+                }
+            }
         }
-        note.originalIndex = notes.size();
-        notes.add(note);
-        return true;
+        return new Pair<>(noteManager, noteManager.notesLoaded ? ErrorCode.NO_ERROR : ErrorCode.NOTE_MALFORMED);
     }
 
     private ErrorCode loadLegacyNotes() {
@@ -138,6 +145,11 @@ class NoteManager {
         for (Note note : notes) {
             if (!note.save()) {
                 allSaved = false;
+            }
+            for (Note child : note.children) {
+                if (!child.save()) {
+                    allSaved = false;
+                }
             }
         }
         return allSaved;
@@ -201,7 +213,7 @@ class NoteManager {
         }
     }
 
-    private int findLocation(Note note) {
+    int findLocation(Note note) {
         for (int i = 0; i < notes.size(); i++) {
             if (!(notes.get(i) instanceof Note.NoteDateInfo)) {
                 if (notes.get(i).id.equals(note.id)) {
@@ -235,9 +247,8 @@ class NoteManager {
         if (position >= 0) {
             notes.remove(note);
             ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyItemRemoved(position);
-            return position;
         }
-        return -1;
+        return position;
     }
 
     void unhideNote(Note note, int position) {
@@ -249,10 +260,11 @@ class NoteManager {
 
     void sortNotes() {
         if (notes.size() >= 2) {
+            clearLabels();
 
             noteComparator.isSorting = true;
             Collections.sort(notes, noteComparator);
-            groupNotes();
+            labelNotes();
 
             ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyDataSetChanged();
             notesSorted = true;
@@ -261,14 +273,8 @@ class NoteManager {
 
     void unsortNotes() {
         if (notes.size() >= 2) {
+            clearLabels();
 
-            for (int i = 0; i < notes.size(); i++) {
-                if (notes.get(i) instanceof Note.NoteDateInfo) {
-                    notes.remove(i);
-                    ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyItemRemoved(i);
-                    i--;
-                }
-            }
             noteComparator.isSorting = false;
             Collections.sort(notes, noteComparator);
 
@@ -277,7 +283,7 @@ class NoteManager {
         }
     }
 
-    private void groupNotes() {
+    private void labelNotes() {
         if (notes.isEmpty()) {
             return;
         }
@@ -317,6 +323,16 @@ class NoteManager {
         }
     }
 
+    private void clearLabels() {
+        for (int i = 0; i < notes.size(); i++) {
+            if (notes.get(i) instanceof Note.NoteDateInfo) {
+                notes.remove(i);
+                ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyItemRemoved(i);
+                i--;
+            }
+        }
+    }
+
     void filterNotes(String query) {
         String checkString = previousFilter;
         if (query.length() < previousFilter.length() && query.length() != 0) {
@@ -350,6 +366,78 @@ class NoteManager {
 
     private boolean matchesFilter(String filter, Note note) {
         return note.title.contains(filter);
+    }
+
+    boolean isSelectingChildNotes() {
+        return selectedParentNote != null;
+    }
+
+    boolean isSelectedParentNote(Note note) {
+        return selectedParentNote == note;
+    }
+
+    void startNoteGrouping(Note parent) {
+        for (int i = 0; i < notes.size(); i++) {
+            Note note = notes.get(i);
+            for (int j = 0; j < note.children.size(); j++) {
+                Note child = note.children.get(j);
+                if (parent != note) {
+                    int childLoc = hideNote(child);
+                    if (childLoc != -1 && childLoc < i) {
+                        i--;
+                    }
+                } else {
+                    if (!notes.contains(child)) {
+                        unhideNote(child, i + j + 1);
+
+                    }
+                }
+            }
+        }
+        selectedParentNote = parent;
+        parent.isNoteGroup = true;
+    }
+
+    void stopNoteGrouping() {
+        if (selectedParentNote.children.size() != 0) {
+            for (Note note : selectedParentNote.children) {
+                hideNote(note);
+            }
+            selectedParentNote.save();
+            if (notesSorted) {
+                sortNotes();
+            }
+        } else {
+            selectedParentNote.isNoteGroup = false;
+        }
+        selectedParentNote = null;
+    }
+
+    boolean isSelectedChildNote(Note note) {
+        return selectedParentNote.children.contains(note);
+    }
+
+    boolean isChildNote(Note note) {
+        for (Note n : notes) {
+            if (n.children.contains(note)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    boolean toggleNoteSelectionState(Note child) {
+        boolean childPresent = selectedParentNote.children.contains(child);
+        if (childPresent) {
+            selectedParentNote.children.remove(child);
+        } else {
+            if (!isChildNote(child)) {
+                selectedParentNote.children.add(child);
+            } else {
+                return false;
+            }
+        }
+        return !childPresent;
     }
 
     static class NoteComparator implements Comparator<Note> {

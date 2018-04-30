@@ -16,12 +16,21 @@
     <string name="snackbar_noteDeleted">Note Deleted!</string>
     <string name="snackbar_noteNotDeleted">Couldn\'t delete the note!</string>
     <string name="snackbar_failedToSave">Couldn\'t save the note!</string>
+    <string name="snackbar_failedToMakeGroup">Couldn\'t make the group!</string>
+    <string name="snackbar_finish">DONE</string>
     <string name="snackbar_retry">RETRY</string>
     <string name="snackbar_undo">UNDO</string>
 
+    <string name="fab_newNote">Create note</string>
+    <string name="fab_newNoteGroup">New note group</string>
+
     <string name="about_defaultDesc">The purpose of Draftpad is to allow you to create and edit notes in the most simple and easy to use manner possible.</string>
-    <string name="about_aboutMe">"I'm a Software Engineering student at Carleton University. I code in VB.NET, JavaScript, HTML, CSS, not forgetting the obvious; Android and Java."</string>
+    <string name="about_aboutMe">"I'm a Software Engineering student at Carleton University. I code in VB.NET, HTML, CSS and not forgetting the obvious; Android and Java."</string>
     <string name="about_visitWebsite">Visit my website</string>
+    <string name="about_creditsTitle">Open Source Credits</string>
+    <string name="about_creditsGitHub">GitHub Repo</string>
+    <string name="aboutCredits_afabTitle">Android Floating Action Button</string>
+    <string name="aboutCredits_afabAuthor">Oleksandr Melnykov</string>
 
     <string name="dash_notLoadedError">Error</string>
     <string name="dash_notLoaded">Draftpad failed to load!</string>
@@ -30,13 +39,22 @@
     <string name="dash_emptyList">Empty List</string>
     <string name="dash_noNotes">YOU HAVE NO NOTES</string>
     <string name="dash_noNotesHelp">Create one by tapping the + icon below</string>
+    <string name="dash_alreadySelectingChildren">You are already selecting sub-notes!\nPlease finish your current selection before starting a new one.</string>
+    <string name="dash_selectingChildrenSnackbar">Currently selecting sub-notes.</string>
+    <string name="dash_noLongerSelectingChildren">No longer selecting sub-notes.</string>
+    <string name="dash_cannotSelectParentAsChild">This note is already a note group</string>
+    <string name="dash_cannotSelectChildAsParent">You can\'t make a sub-note a note group</string>
+    <string name="dash_newGroupTitle">A Group</string>
+    <string name="dash_newGroupChildTitle">A Note</string>
+    <string name="dash_newGroupChildBody">Some text</string>
     <string name="dashList_thisWeekLabel">This Week</string>
     <string name="dashList_thisMonthLabel">This Month</string>
 
     <string name="noteDetails_appBarCreate">Create Note</string>
     <string name="noteDetails_appBarEdit">Edit Note</string>
     <string name="noteDetails_titleHint">Tap to add a title</string>
-    <string name="noteDetails_save">Save</string>
     <string name="noteDetails_bodyHint">Tap to add a note body</string>
     <string name="noteDetails_delete">Delete note</string>
+    <string name="noteDetails_confirmDeleteNormal">Do you really want to delete this note?</string>
+    <string name="noteDetails_confirmDeleteGroup">Do you really want to delete this note group?\nAll notes in this group will be moved out.</string>
 </resources>

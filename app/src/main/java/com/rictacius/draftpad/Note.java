@@ -4,12 +4,14 @@ import android.content.Context;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
 
 import xyz.victorolaitan.easyjson.EasyJSON;
 import xyz.victorolaitan.easyjson.EasyJSONException;
+import xyz.victorolaitan.easyjson.JSONElement;
 
 /**
  * Created by Victor Olaitan on 19/02/2017.
@@ -24,10 +26,40 @@ class Note {
     String body = "";
     Date created;
     Date edited;
+    UUID[] childIDs;
+    ArrayList<Note> children = new ArrayList<>();
+    boolean isNoteGroup;
+    boolean noteChildrenExpanded;
     int originalIndex;
 
     Note(Context context) {
         this.context = context;
+    }
+
+    boolean parse(EasyJSON noteData, ArrayList<Note> notes) {
+        try {
+            id = UUID.fromString((String) noteData.valueOf("id"));
+            created = Note.dateFormat.parse((String) noteData.valueOf("created"));
+            edited = Note.dateFormat.parse((String) noteData.valueOf("edited"));
+            title = (String) noteData.valueOf("title");
+            body = ((String) noteData.valueOf("body"));
+            if (!noteData.elementExists("children")) {
+                noteData.putArray("children");
+                if (!save()) {
+                    return false;
+                }
+            }
+            JSONElement childrenData = noteData.search("children");
+            childIDs = new UUID[childrenData.getChildren().size()];
+            for (int i = 0; i < childIDs.length; i++) {
+                childIDs[i] = UUID.fromString((String) ((JSONElement) childrenData.getChildren().get(i)).getValue());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        originalIndex = notes.size();
+        return true;
     }
 
     boolean save() {
@@ -38,6 +70,10 @@ class Note {
         json.putPrimitive("edited", dateFormat.format(edited));
         json.putPrimitive("title", title);
         json.putPrimitive("body", body);
+        json.putArray("children");
+        for (Note child : children) {
+            json.search("children").putPrimitive(child.id.toString());
+        }
 
         try {
             json.save();

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/formatbar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorDivider">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/formatbar_clearFormat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Clear Formatting"
+            app:srcCompat="@drawable/ic_format_clear_black_24dp" />
+
+        <ImageButton
+            android:id="@+id/formatbar_bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Format Bold"
+            app:srcCompat="@drawable/ic_format_bold_black_24dp" />
+
+        <ImageButton
+            android:id="@+id/formatbar_italic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Format Italic"
+            app:srcCompat="@drawable/ic_format_italic_black_24dp" />
+
+        <ImageButton
+            android:id="@+id/formatbar_underline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Format Underline"
+            app:srcCompat="@drawable/ic_format_underlined_black_24dp" />
+
+        <ImageButton
+            android:id="@+id/formatbar_alignLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Align Left"
+            app:srcCompat="@drawable/ic_format_align_left_black_24dp" />
+
+        <ImageButton
+            android:id="@+id/formatbar_alignCentre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Align Centre"
+            app:srcCompat="@drawable/ic_format_align_center_black_24dp" />
+
+        <ImageButton
+            android:id="@+id/formatbar_alignRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Align Right"
+            app:srcCompat="@drawable/ic_format_align_right_black_24dp" />
+
+        <ImageButton
+            android:id="@+id/formatbar_alignJustify"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Align Justify"
+            app:srcCompat="@drawable/ic_format_align_justify_black_24dp" />
+
+        <ImageButton
+            android:id="@+id/formatbar_textColour"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Text Colour"
+            app:srcCompat="@drawable/ic_format_color_text_black_24dp" />
+
+    </LinearLayout>
+
+</HorizontalScrollView>
