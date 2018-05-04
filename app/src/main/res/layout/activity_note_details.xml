@@ -47,9 +47,11 @@
         layout="@layout/content_note_details"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/ND_appbar" />
+        android:layout_below="@id/ND_appbar"
+        android:layout_above="@+id/ND_formatBar" />
 
     <include
+        android:id="@+id/ND_formatBar"
         layout="@layout/text_format_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

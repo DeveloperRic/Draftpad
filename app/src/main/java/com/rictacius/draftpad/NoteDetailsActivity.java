@@ -214,6 +214,11 @@ public class NoteDetailsActivity extends AppCompatActivity {
         note.title = txtTitle.getText().toString();
         note.body = txtBody.getText().toString();
         note.edited = new Date();
+        if (ActivityManager.getNoteManager().isChildNote(note)) {
+            ActivityManager.getNoteManager().getParentNote(note).edited = note.edited;
+            ActivityManager.getNoteManager().hideAllChildNotes();
+            ActivityManager.getNoteManager().sortNotes();
+        }
         if (note.save()) {
             if (isNewNote) {
                 ActivityManager.getNoteManager().addNote(note);

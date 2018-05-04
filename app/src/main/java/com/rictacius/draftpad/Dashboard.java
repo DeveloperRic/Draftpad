@@ -67,6 +67,7 @@ public class Dashboard extends AppCompatActivity {
                 child.title = getResources().getString(R.string.dash_newGroupChildTitle);
                 child.body = getResources().getString(R.string.dash_newGroupChildBody);
                 note.children.add(child);
+                note.isNoteGroup = true;
                 if (child.save() && note.save()) {
                     ActivityManager.getNoteManager().addNote(note);
                 } else {
@@ -128,6 +129,7 @@ public class Dashboard extends AppCompatActivity {
                 if (ActivityManager.getNoteManager().notesSorted) {
                     ActivityManager.getNoteManager().unsortNotes();
                 }
+                ActivityManager.getNoteManager().unhideAllChildNotes();
                 return true;
             }
 
@@ -135,12 +137,11 @@ public class Dashboard extends AppCompatActivity {
             public boolean onMenuItemActionCollapse(MenuItem menuItem) {
                 ActivityManager.getNoteManager().filterNotes("");
                 if (ActivityManager.getSettings().sortNotes) {
-                    if (!ActivityManager.getNoteManager().notesSorted) {
-                        ActivityManager.getNoteManager().sortNotes();
-                    }
+                    ActivityManager.getNoteManager().sortNotes();
                 } else {
                     ActivityManager.getNoteManager().unsortNotes();
                 }
+                ActivityManager.getNoteManager().hideAllChildNotes();
                 return true;
             }
         });
@@ -153,6 +154,7 @@ public class Dashboard extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.dash_appbar_action_sort:
+                ActivityManager.getNoteManager().hideAllChildNotes();
                 if (ActivityManager.getNoteManager().notesSorted) {
                     ActivityManager.getNoteManager().unsortNotes();
                     Toast.makeText(this, R.string.appbar_result_unsorted, Toast.LENGTH_SHORT).show();
@@ -351,6 +353,13 @@ public class Dashboard extends AppCompatActivity {
                     }
                 }
                 noteExpand.setVisibility(note.children.size() != 0 && !ActivityManager.getNoteManager().isSelectingChildNotes() ? View.VISIBLE : View.GONE);
+                if (note.children.size() != 0) {
+                    if (note.noteChildrenExpanded) {
+                        noteExpand.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_expand_less_black_24dp));
+                    } else {
+                        noteExpand.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_expand_more_black_24dp));
+                    }
+                }
             }
         }
 

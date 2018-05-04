@@ -91,6 +91,7 @@ class NoteManager {
                 }
                 if (note.children.size() != 0) {
                     note.isNoteGroup = true;
+                    Collections.sort(note.children, noteManager.noteComparator);
                 }
             }
         }
@@ -253,8 +254,38 @@ class NoteManager {
 
     void unhideNote(Note note, int position) {
         if (position >= 0) {
+            if (notes.contains(note)) {
+                int loc = findLocation(note);
+                notes.remove(loc);
+                ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyItemRemoved(loc);
+            }
             notes.add(position, note);
             ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyItemInserted(position);
+        }
+    }
+
+    void unhideAllChildNotes() {
+        for (int i = 0; i < notes.size(); i++) {
+            Note note = notes.get(i);
+            note.noteChildrenExpanded = true;
+            for (int j = 0; j < note.children.size(); j++) {
+                unhideNote(note.children.get(j), i + j + 1);
+            }
+        }
+    }
+
+    void hideAllChildNotes() {
+        for (int i = 0; i < notes.size(); i++) {
+            Note note = notes.get(i);
+            note.noteChildrenExpanded = false;
+            for (int j = 0; j < note.children.size(); j++) {
+                Note child = note.children.get(j);
+                int loc = findLocation(child);
+                if (loc != -1 && loc < i) {
+                    i--;
+                }
+                hideNote(child);
+            }
         }
     }
 
@@ -264,6 +295,9 @@ class NoteManager {
 
             noteComparator.isSorting = true;
             Collections.sort(notes, noteComparator);
+            for (Note note : notes) {
+                Collections.sort(note.children, noteComparator);
+            }
             labelNotes();
 
             ActivityManager.getDashboardActivity().notesRecyclerAdapter.notifyDataSetChanged();
@@ -407,6 +441,7 @@ class NoteManager {
             if (notesSorted) {
                 sortNotes();
             }
+            Collections.sort(selectedParentNote.children, noteComparator);
         } else {
             selectedParentNote.isNoteGroup = false;
         }
@@ -418,12 +453,16 @@ class NoteManager {
     }
 
     boolean isChildNote(Note note) {
+        return getParentNote(note) != null;
+    }
+
+    Note getParentNote(Note child) {
         for (Note n : notes) {
-            if (n.children.contains(note)) {
-                return true;
+            if (n.children.contains(child)) {
+                return n;
             }
         }
-        return false;
+        return null;
     }
 
     boolean toggleNoteSelectionState(Note child) {

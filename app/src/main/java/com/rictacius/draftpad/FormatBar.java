@@ -9,7 +9,6 @@ import android.text.style.CharacterStyle;
 import android.text.style.StyleSpan;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 
 /**
@@ -25,12 +24,12 @@ class FormatBar {
     private boolean alignRight;
     private boolean alignJustify;
 
-    private HorizontalScrollView formatBar;
+    private View formatBar;
 
     private int start, end;
 
     FormatBar(final NoteDetailsActivity context, Note note, final EditText noteBody) {
-        formatBar = context.findViewById(R.id.formatbar);
+        formatBar = context.findViewById(R.id.ND_formatBar);
         final Editable bodyText = noteBody.getText();
 
         final ImageButton btnBold = context.findViewById(R.id.formatbar_bold);
